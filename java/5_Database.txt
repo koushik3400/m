@@ -1,0 +1,274 @@
+MainActivity.java
+
+package com.example.fifthapp;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
+import android.app.AlertDialog.Builder;
+import android.os.Bundle;
+import android.text.StaticLayout;
+import android.widget.Button;
+import android.widget.EditText;
+import android.view.View.OnClickListener;
+import android.view.View;
+
+public class MainActivity extends AppCompatActivity implements OnClickListener {
+
+    EditText Name,Reg,Dept;
+    Button Insert,Update,Delete,View,Viewall;
+    SQLiteDatabase db;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Name=(EditText) findViewById(R.id.edit1);
+        Reg=(EditText) findViewById(R.id.edit2);
+        Dept=(EditText) findViewById(R.id.edit3);
+        Insert=(Button) findViewById(R.id.Insert);
+        Update=(Button) findViewById(R.id.Update);
+        Delete=(Button) findViewById(R.id.Delete);
+        View=(Button) findViewById(R.id.View);
+        Viewall=(Button) findViewById(R.id.Viewall);
+
+        Insert.setOnClickListener(this);
+        Update.setOnClickListener(this);
+        Delete.setOnClickListener(this);
+        View.setOnClickListener(this);
+        Viewall.setOnClickListener(this);
+
+        db=openOrCreateDatabase("StudentDB", Context.MODE_PRIVATE,null);
+        db.execSQL("CREATE TABLE IF NOT EXISTS student(name VARCHAR,reg VARCHAR,dept VARCHAR);");
+    }
+    public void onClick(View view){
+        if(view==Insert){
+            if(Name.getText().toString().trim().length()==0 ||
+                    Reg.getText().toString().trim().length()==0 ||
+                    Dept.getText().toString().trim().length()==0 ){
+                showMessage("Error","Fields are empty");
+                return;
+            }
+            else{
+                db.execSQL("INSERT INTO student VALUES('"+Name.getText()+"','"+Reg.getText()+"','"+Dept.getText()+"');");
+                showMessage("Success","Record Inserted");
+                clearText();
+            }
+        }
+        if(view==Delete){
+            if(Name.getText().toString().trim().length()==0){
+                showMessage("Error","Name is empty");
+                return;
+            }
+            else{
+                Cursor c=db.rawQuery("SELECT * FROM student WHERE name='"+Name.getText()+"';",null);
+                if(c.moveToFirst()){
+                    db.execSQL("DELETE FROM student WHERE name='"+Name.getText()+"';");
+                    showMessage("Success","Record deleted");
+                    clearText();
+                }
+                else{
+                    showMessage("Error","Record Not found");
+                    clearText();
+                }
+            }
+        }
+        if(view==Update){
+            if(Name.getText().toString().trim().length()==0){
+                showMessage("Error","Name is empty");
+                return;
+            }
+            else{
+                Cursor c=db.rawQuery("SELECT * FROM student WHERE name='"+Name.getText()+"';",null);
+                if(c.moveToFirst()){
+                    db.execSQL("UPDATE student SET name='"+Name.getText()+"',reg='"+Reg.getText()+"',dept='"+Dept.getText()+"';");
+                    showMessage("Success","Record updated");
+                    clearText();
+                }
+                else{
+                    showMessage("Error","Record Not found");
+                    clearText();
+                }
+
+            }
+        }
+        if(view==View){
+            if(Name.getText().toString().trim().length()==0){
+                showMessage("Error","Name is empty");
+                return;
+            }
+            else{
+                Cursor c=db.rawQuery("SELECT * FROM student WHERE name='"+Name.getText()+"';",null);
+                if(c.moveToFirst()){
+                    Reg.setText(c.getString(1));
+                    Dept.setText(c.getString(2));
+                }
+                else{
+                    showMessage("Error","Record not found");
+                    clearText();
+                }
+            }
+        }
+        if(view==Viewall)
+        {
+            Cursor c=db.rawQuery("SELECT * FROM student", null);
+            if(c.getCount()==0)
+            {
+                showMessage("Error", "No records found");
+                return;
+            }
+            StringBuffer buffer=new StringBuffer();
+            while(c.moveToNext())
+            {
+                buffer.append("Name: "+c.getString(0)+"\n");
+                buffer.append("Register No.: "+c.getString(1)+"\n");
+                buffer.append("Department: "+c.getString(2)+"\n\n");
+            }
+            showMessage("Student Details", buffer.toString());
+        }
+    }
+    public void showMessage(String title,String Message){
+        Builder build=new Builder(this);
+        build.setCancelable(true);
+        build.setTitle(title);
+        build.setMessage(Message);
+        build.show();
+    }
+    public void clearText(){
+        Name.setText("");
+        Reg.setText("");
+        Dept.setText("");
+        Name.requestFocus();
+    }
+}
+
+activity_main.xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp">
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/topic"
+            android:text="Student details"
+            android:textSize="25sp"
+            android:gravity="center"
+            android:layout_margin="10dp"/>
+    </LinearLayout>
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:rowCount="3"
+        android:columnCount="2">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txt1"
+            android:text="Name"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:layout_margin="20dp"
+            android:layout_row="0"
+            android:layout_column="0"/>
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:layout_row="0"
+            android:layout_column="1"
+            android:layout_margin="10dp"
+            android:id="@+id/edit1"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txt2"
+            android:text="Register No."
+            android:textSize="18sp"
+            android:gravity="center"
+            android:layout_margin="20dp"
+            android:layout_row="1"
+            android:layout_column="0"/>
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:layout_row="1"
+            android:layout_column="1"
+            android:id="@+id/edit2"
+            android:layout_margin="10dp"
+            />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/txt3"
+            android:text="Department"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:layout_margin="20dp"
+            android:layout_row="2"
+            android:layout_column="0"/>
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ems="10"
+            android:layout_row="2"
+            android:layout_column="1"
+            android:layout_margin="10dp"
+            android:id="@+id/edit3"
+            />
+    </GridLayout>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Insert"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="100dp"
+        android:layout_marginBottom="350dp"
+        android:id="@+id/Insert"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Update"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="100dp"
+        android:layout_marginBottom="250dp"
+        android:id="@+id/Update"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Delete"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="200dp"
+        android:layout_marginBottom="350dp"
+        android:id="@+id/Delete"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="View"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="200dp"
+        android:layout_marginBottom="250dp"
+        android:id="@+id/View"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="View All"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="150dp"
+        android:layout_marginBottom="150dp"
+        android:id="@+id/Viewall"/>
+
+</RelativeLayout>
